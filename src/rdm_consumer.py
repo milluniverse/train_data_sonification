@@ -47,9 +47,11 @@ def run_live_consumer():
     try:
         from confluent_kafka import Consumer, KafkaError
 
+        group_id = os.getenv("RDM_CONSUMER_GROUP", f"sonification-{consumer_key[:8]}")
+
         conf = {
             'bootstrap.servers': bootstrap_server,
-            'group.id': f"sonification-{consumer_key[:8]}",
+            'group.id': group_id,
             'auto.offset.reset': 'latest',
             'enable.auto.commit': True,
             'security.protocol': security_protocol,
