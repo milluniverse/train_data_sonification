@@ -37,18 +37,18 @@ class OSCTransport:
         if not record:
             return
 
-        schedule_id = str(record.get("schedule_id", ""))
+        station_code = (record.get("station_code", ""))
         train_id = str(record.get("train_id", ""))
-        station_code = str(record.get("station_code", ""))
         status = str(record.get("status", "NO REPORT"))
+        status_int = STATUS_CODE_MAP.get(status, 5)
         delay_sec = int(record.get("delay_seconds", 0))
         platform = str(record.get("platform", ""))
-        status_int = STATUS_CODE_MAP.get(status, 5)
+        schedule_id = str(record.get("schedule_id", ""))
 
         # Main Event packet
         self.client.send_message(
             "/train/event",
-            [schedule_id, train_id, station_code, status, delay_sec, platform]
+            [station_code, train_id, status, status_int, delay_sec, platform, schedule_id,]
         )
 
         # Macro Delay packet
