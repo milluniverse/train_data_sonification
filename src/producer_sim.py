@@ -119,11 +119,8 @@ def run_simulator(interval_seconds: float = 0.5, count: int = 20):
 
     from src.parser import flatten_darwin_update
     from src.osc_sender import OSCTransport
-    from src.database import DatabaseManager
 
     osc = OSCTransport()
-    db = DatabaseManager()
-    db.connect()
 
     for i in range(count):
         payload = generate_sample_darwin_update()
@@ -136,7 +133,6 @@ def run_simulator(interval_seconds: float = 0.5, count: int = 20):
         # Parse & send direct OSC
         records = flatten_darwin_update(payload)
         osc.send_batch(records)
-        db.insert_records(records)
 
         rec = records[0] if records else {}
         print(
@@ -149,7 +145,6 @@ def run_simulator(interval_seconds: float = 0.5, count: int = 20):
     if use_kafka and producer:
         producer.flush()
 
-    db.close()
     print("Simulation run completed successfully.")
 
 
