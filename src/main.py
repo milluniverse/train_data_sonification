@@ -11,7 +11,6 @@ import logging
 from typing import Optional
 
 from src.parser import parse_raw_message, flatten_darwin_update
-from src.database import DatabaseManager
 from src.osc_sender import OSCTransport
 
 logging.basicConfig(
@@ -28,15 +27,7 @@ def run_pipeline(
 ):
     kafka_bootstrap = kafka_bootstrap or os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
 
-    db = DatabaseManager()
     osc = OSCTransport()
-
-    logger.info("Initializing TimescaleDB connection...")
-    try:
-        db.connect()
-        logger.info("TimescaleDB connected successfully.")
-    except Exception as e:
-        logger.warning(f"TimescaleDB connection deferred/failed: {e}")
 
     logger.info(f"Connecting to Kafka broker at {kafka_bootstrap} (Topic: {topic})...")
 
@@ -70,14 +61,8 @@ def run_pipeline(
 
             records = flatten_darwin_update(payload)
             if records:
-                # 1. Stream to Max via OSC
+                # Stream to Max via OSC
                 osc.send_batch(records)
-
-                # 2. Persist to TimescaleDB
-                try:
-                    db.insert_records(records)
-                except Exception as db_err:
-                    logger.warning(f"Database insertion failed: {db_err}")
 
                 for r in records:
                     logger.info(

@@ -1,6 +1,6 @@
 # National Rail Darwin Train Data Sonification Engine
 
-A real-time data ingestion, transformation, and musical sonification pipeline that consumes National Rail Darwin Pub/Sub updates via Kafka from the Rail Data Marketplace (RDM), normalizes train delays and status changes, persists historical events to TimescaleDB (with local SQLite fallback), and streams Open Sound Control (OSC) packets over UDP to Cycling '74 Max for real-time audio synthesis.
+A real-time data ingestion, transformation, and musical sonification pipeline that consumes National Rail Darwin Pub/Sub updates via Kafka from the Rail Data Marketplace (RDM), normalizes train delays and status changes in memory, and streams Open Sound Control (OSC) packets over UDP to Cycling '74 Max for real-time audio synthesis.
 
 Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical Sonification)**.
 
@@ -9,24 +9,32 @@ Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical So
 ## 🏗️ System Architecture
 
 ```text
-               ┌─────────────────────────────────────────────────┐
-               │ National Rail Darwin Pub/Sub (Confluent Cloud)  │
-               └────────────────────────┬────────────────────────┘
-                                        │ SASL_SSL JSON Stream
-                                        ▼
-               ┌─────────────────────────────────────────────────┐
-               │    Live Consumer Pipeline (src/rdm_consumer.py) │
-               │   • Decodes raw RDM JSON updates                │
-               │   • Normalizes delays, statuses, platforms      │
-               └───────────┬─────────────────────────┬───────────┘
-                           │                         │
-             Persists to   │                         │ Streams OSC (UDP)
-          Timescale/SQLite │                         │ 127.0.0.1:7400
-                           ▼                         ▼
-            ┌─────────────────────┐   ┌─────────────────────────────┐
-            │ Time-Series DB      │   │ Cycling '74 Max Patch       │
-            │ (train_events table)│   │ (train_data_sonification)   │
-            └─────────────────────┘   └─────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│              National Rail Darwin Pub/Sub (Confluent Cloud)             │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │ SASL_SSL JSON Stream
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                 Python Ingestion Engine (src/rdm_consumer.py)           │
+│   • Decodes raw RDM JSON updates in memory                              │
+│   • Normalizes delays, statuses, platforms, and train IDs               │
+└────────────────────────────────────┬────────────────────────────────────┘
+                                     │
+                                     │ Streams UDP OSC Packets
+                                     │ 127.0.0.1:7400
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Cycling '74 Max Patcher     │
+                      │ (train_data_sonification)   │
+                      └──────────────┬──────────────┘
+                                     │
+                                     ▼
+                      ┌─────────────────────────────┐
+                      │ Station Nodes & Master Synth│
+                      │ • Station Route (e.g. GLGC) │
+                      │ • Status Route (0,1,2,3,4)  │
+                      │ • Master Additive Engines   │
+                      └─────────────────────────────┘
 ```
 
 ---
@@ -44,7 +52,7 @@ Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical So
 
 1. Open your Mac Terminal and navigate to the project root:
    ```bash
-   cd "/Users/etc.../TRAIN_DATA_SONIFICATION
+   cd "/Users/milludaltcasa/Desktop/YEAR 3 SEM 1/Creative Coding for Sound/Assignment 2/TRAIN_DATA_SONIFICATION"
    ```
 
 2. Install Python dependencies:
@@ -87,11 +95,10 @@ python3 -m src.rdm_consumer
 
 **Expected Terminal Output**:
 ```text
-2026-08-07 19:30:00 [INFO] Connected to local SQLite database at 'train_sonification.db'.
-2026-08-07 19:30:00 [INFO] Connecting to Live National Rail Darwin Kafka cluster at pkc-z3p1v0.europe-west2.gcp.confluent.cloud:9092...
-2026-08-07 19:30:01 [INFO] Subscribed to live topic 'prod-1010-Darwin-Train-Information-Push-Port-IIII2_0-JSON'.
-2026-08-07 19:30:05 [INFO] LIVE [TS_UPDATE] Station: EDINB | Train: 1A99 | Status: ON TIME | Delay: 0s | Platform: 14
-2026-08-07 19:30:06 [INFO] LIVE [TS_UPDATE] Station: MNCRPIC | Train: 9X99 | Status: LATE | Delay: 540s | Platform: 12
+2026-08-10 04:30:00 [INFO] Connecting to Live National Rail Darwin Kafka cluster at pkc-z3p1v0.europe-west2.gcp.confluent.cloud:9092...
+2026-08-10 04:30:01 [INFO] Subscribed to live topic 'prod-1010-Darwin-Train-Information-Push-Port-IIII2_0-JSON'.
+2026-08-10 04:30:05 [INFO] LIVE [TS_UPDATE] Station: EDINB | Train: 1A99 | Status: ON TIME | Delay: 0s | Platform: 14
+2026-08-10 04:30:06 [INFO] LIVE [TS_UPDATE] Station: MNCRPIC | Train: 9X99 | Status: LATE | Delay: 540s | Platform: 12
 ```
 
 ---
@@ -113,33 +120,23 @@ python3 -c "from src.producer_sim import run_simulator; run_simulator(interval_s
 
 ### 6. Connect Cycling '74 Max
 
-1. Open [`train_data_sonification.maxpat`](file:///Users/milludaltcasa/Desktop/YEAR%203%20SEM%201/Creative%20Coding%20for%20Sound/Assignment%202/TRAIN_DATA_SONIFICATION/train_data_sonification.maxpat) in Cycling '74 Max.
+1. Open `train_data_sonification.maxpat` in Cycling '74 Max.
 2. Turn on the audio engine (`ezdac~`).
 3. Max will receive live OSC packets on UDP `127.0.0.1:7400`.
 
 ---
 
-## OSC Address & Parameter Protocol
+## 🎛️ OSC Address & Parameter Protocol
 
 | OSC Address | Data Payload | Description / Max Parameter Mapping |
 | :--- | :--- | :--- |
-| **`/train/event`** | `[schedule_id, train_id, station_code, status, delay_sec, platform]` | Full record packet for display and parsing. |
+| **`/train/event`** | `[station_code, schedule_id, train_id, status, delay_sec, platform]` | Full record packet for display and station routing. |
 | **`/train/delay`** | `[delay_sec]` | Macro delay in seconds (modulates filter cutoff frequency, pitch shift, resonance). |
 | **`/train/trigger`** | `[station_code, status_int, delay_sec]` | Discrete trigger (`0`=On Time, `1`=Early, `2`=Late, `3`=Cancelled, `4`=Activated) for envelope triggers & per-station subpatch routing. |
 
 ---
 
-## Running Unit Tests
-
-Run the full automated unit test suite covering schema parsing, delay calculation edge cases, database persistence, and OSC packet generation:
-
-```bash
-python3 -m unittest discover -s tests
-```
-
----
-
-## Project Structure
+## 📂 Project Structure
 
 ```text
 .
@@ -147,19 +144,13 @@ python3 -m unittest discover -s tests
 ├── .env.example               # Environment variable template
 ├── README.md                  # Project documentation & setup guide
 ├── requirements.txt           # Python dependency manifest
-├── docker-compose.yml         # Container stack (KRaft Kafka, TimescaleDB, Kafka UI)
-├── scripts/
-│   └── init_db.sql            # TimescaleDB hypertable setup script
+├── docker-compose.yml         # Container stack (KRaft Kafka, Kafka UI)
 ├── src/
 │   ├── __init__.py
-│   ├── database.py            # TimescaleDB & SQLite auto-fallback manager
 │   ├── main.py                # Local Kafka consumer entrypoint
 │   ├── osc_sender.py          # UDP OSC transport module
 │   ├── parser.py              # Darwin JSON/XML schema parser & record flattener
 │   ├── producer_sim.py        # Synthetic Darwin event producer
 │   └── rdm_consumer.py        # Live Rail Data Marketplace consumer
-├── tests/
-│   ├── test_phase1.py         # Phase 1 unit tests (parsing, delays, fields)
-│   └── test_phase2.py         # Phase 2 unit tests (database, OSC transport)
 └── train_data_sonification.maxpat # Cycling '74 Max audio synthesis patch
 ```

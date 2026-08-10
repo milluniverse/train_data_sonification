@@ -1,4 +1,5 @@
 Documentation/
+tests/
 TRAIN_DATA_SONIFICATION.md
 *.db
 __pycache__/

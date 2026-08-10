@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from src.parser import parse_raw_message, flatten_darwin_update
-from src.database import DatabaseManager
 from src.osc_sender import OSCTransport
 
 logging.basicConfig(
@@ -37,10 +36,7 @@ def run_live_consumer():
         logger.info("Please copy '.env.example' to '.env' and fill in your RDM_CONSUMER_KEY and RDM_CONSUMER_SECRET from https://raildata.org.uk")
         sys.exit(1)
 
-    db = DatabaseManager()
     osc = OSCTransport()
-
-    db.connect()
 
     logger.info(f"Connecting to Live National Rail Darwin Kafka cluster at {bootstrap_server}...")
     
@@ -85,11 +81,8 @@ def run_live_consumer():
             records = flatten_darwin_update(payload)
             if records:
                 msg_count += len(records)
-                # 1. Stream live OSC to Max
+                # Stream live OSC to Max
                 osc.send_batch(records)
-
-                # 2. Persist to database
-                db.insert_records(records)
 
                 for r in records:
                     logger.info(
@@ -102,8 +95,6 @@ def run_live_consumer():
         logger.info("Live consumer stopped by user.")
     except Exception as err:
         logger.error(f"Fatal error in live consumer: {err}")
-    finally:
-        db.close()
 
 
 if __name__ == "__main__":
