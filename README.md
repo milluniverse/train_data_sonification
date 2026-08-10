@@ -6,7 +6,7 @@ Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical So
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -33,13 +33,14 @@ Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical So
                       │ Station Nodes & Master Synth│
                       │ • Station Route (e.g. GLGC) │
                       │ • Status Route (0,1,2,3,4)  │
-                      │ • Master Additive Engines   │
+                      │ • Sythesis (Additive,       │
+                      │   Pulsar) and Sampler       │
                       └─────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Quickstart Guide: Running the Live Darwin Stream from Terminal
+## Quickstart Guide: Running the Live Darwin Stream from Terminal
 
 ### 1. Prerequisites
 * **Python 3.9+**
@@ -126,7 +127,7 @@ python3 -c "from src.producer_sim import run_simulator; run_simulator(interval_s
 
 ---
 
-## 🎛️ OSC Address & Parameter Protocol
+## OSC Address & Parameter Protocol
 
 | OSC Address | Data Payload | Description / Max Parameter Mapping |
 | :--- | :--- | :--- |
@@ -136,7 +137,7 @@ python3 -c "from src.producer_sim import run_simulator; run_simulator(interval_s
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .
