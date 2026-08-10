@@ -44,7 +44,7 @@ Developed for **Creative Coding for Sound — Assignment 2 (Option 1: Musical So
 
 1. Open your Mac Terminal and navigate to the project root:
    ```bash
-   cd "/Users/milludaltcasa/Desktop/YEAR 3 SEM 1/Creative Coding for Sound/Assignment 2/TRAIN_DATA_SONIFICATION"
+   cd "/Users/etc.../TRAIN_DATA_SONIFICATION
    ```
 
 2. Install Python dependencies:
@@ -119,7 +119,7 @@ python3 -c "from src.producer_sim import run_simulator; run_simulator(interval_s
 
 ---
 
-## 🎛️ OSC Address & Parameter Protocol
+## OSC Address & Parameter Protocol
 
 | OSC Address | Data Payload | Description / Max Parameter Mapping |
 | :--- | :--- | :--- |
@@ -129,7 +129,7 @@ python3 -c "from src.producer_sim import run_simulator; run_simulator(interval_s
 
 ---
 
-## 🧪 Running Unit Tests
+## Running Unit Tests
 
 Run the full automated unit test suite covering schema parsing, delay calculation edge cases, database persistence, and OSC packet generation:
 
@@ -139,7 +139,7 @@ python3 -m unittest discover -s tests
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .

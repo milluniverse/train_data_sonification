@@ -14,14 +14,14 @@ from typing import List, Dict, Any
 
 
 SAMPLE_STATIONS = [
+    ("GLGC", "Glasgow Central"),
     ("MNCRPIC", "Manchester Piccadilly"),
+    ("EDINBUR", "Edinburgh Waverley"),
     ("EUSTON", "London Euston"),
-    ("BHM", "Birmingham New Street"),
+    ("BHAMNWS", "Birmingham New Street"),
     ("LIVST", "Liverpool Lime Street"),
-    ("GLC", "Glasgow Central"),
-    ("EDINB", "Edinburgh Waverley"),
-    ("CREWE", "Crewe"),
-    ("CHSTR", "Chester"),
+    ("LEEDS", "Leeds"),
+    ("YORK", "York"),
 ]
 
 
